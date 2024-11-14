@@ -17,7 +17,7 @@ contract FundMeTest is Test {
         DeployFundMe deployFundMe = new DeployFundMe();
         fundMe = deployFundMe.run();
         console.log("msg.sender", msg.sender);
-        console.log("owner", fundMe.i_owner());
+        console.log("owner", fundMe.getOwner());
         console.log("address(this)", address(this));
         console.log("USER", USER);
         vm.deal(USER, STARTING_BALANCE);
@@ -34,8 +34,7 @@ contract FundMeTest is Test {
     }
 
     function testOwnerIsSender() public view {
-        console.log(fundMe.i_owner(), msg.sender);
-        assertEq(fundMe.i_owner(), msg.sender);
+        assertEq(fundMe.getOwner(), msg.sender);
     }
 
     function testPriceFeedVersion() public view {
@@ -65,8 +64,22 @@ contract FundMeTest is Test {
     }
 
     function testWithdrawWithSingleFunder() public funded {
-        vm.prank(msg.sender);
+        // Arrange
+        uint256 startingOwnerBalance = fundMe.getOwner().balance;
+        uint256 startingFundMeBalance = address(fundMe).balance;
+
+        // Act
+        vm.prank(fundMe.getOwner());
         fundMe.withdraw();
+
+        // Assert
+        uint256 endingOwnerBalance = fundMe.getOwner().balance;
+        uint256 endingFundMeBalance = address(fundMe).balance;
+        assertEq(endingFundMeBalance, 0);
+        assertEq(
+            startingFundMeBalance + startingOwnerBalance,
+            endingOwnerBalance
+        );
         assertEq(fundMe.getAddressToAmountFunded(USER), 0);
         vm.expectRevert();
         fundMe.getFunder(0);
