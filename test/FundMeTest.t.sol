@@ -51,4 +51,13 @@ contract FundMeTest is Test {
         fundMe.fund{value: SEND_VALUE}();
         assertEq(fundMe.getFunder(0), USER);
     }
+
+    function testOnlyOwnerCanWithdraw() public {
+        vm.prank(USER);
+        fundMe.fund{value: SEND_VALUE}();
+
+        vm.expectRevert("FundMe__NotOwner");
+        vm.prank(USER); // USER is not the owner
+        fundMe.withdraw();
+    }
 }
