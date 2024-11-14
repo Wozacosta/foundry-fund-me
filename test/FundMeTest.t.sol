@@ -16,6 +16,10 @@ contract FundMeTest is Test {
     function setUp() external {
         DeployFundMe deployFundMe = new DeployFundMe();
         fundMe = deployFundMe.run();
+        console.log("msg.sender", msg.sender);
+        console.log("owner", fundMe.i_owner());
+        console.log("address(this)", address(this));
+        console.log("USER", USER);
         vm.deal(USER, STARTING_BALANCE);
     }
 
@@ -58,5 +62,14 @@ contract FundMeTest is Test {
         vm.expectRevert();
         vm.prank(USER); // USER is not the owner
         fundMe.withdraw();
+    }
+
+    function testWithdrawWithSingleFunder() public funded {
+        vm.prank(msg.sender);
+        fundMe.withdraw();
+        assertEq(fundMe.getAddressToAmountFunded(USER), 0);
+        vm.expectRevert();
+        fundMe.getFunder(0);
+        // assertEq(fundMe.getFunder(0), address(0));
     }
 }
